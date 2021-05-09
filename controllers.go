@@ -14,6 +14,27 @@ import (
 	"gopkg.in/h2non/filetype.v1"
 )
 
+// swagger:operation GET / ImaginaryGetVersion
+//
+// Get Imaginary Version
+//
+// Provides the current imaginary server version
+//
+// ---
+// tags:
+// - PUBLIC
+// responses:
+//   '200':
+//     description: Imaginary Version
+//     type: object
+//     schema:
+//       "$ref": "#/definitions/imaginary_Versions"
+//   default:
+//     description: Request Error
+//     type: object
+//     schema:
+//       "$ref": "#/definitions/imaginary_Error"
+
 func indexController(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		ErrorReply(r, w, ErrNotFound, ServerOptions{})
@@ -29,6 +50,26 @@ func indexController(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(body)
 }
 
+// swagger:operation GET /health ImaginaryHealthStats
+//
+// Get Health Statistics
+//
+// Provides the current health statistics of the imaginary server instance
+//
+// ---
+// tags:
+// - PUBLIC
+// responses:
+//   '200':
+//     description: Imaginary Health Stats
+//     type: object
+//     schema:
+//       "$ref": "#/definitions/imaginary_HealthStats"
+//   default:
+//     description: Imaginary Error
+//     type: object
+//     schema:
+//       "$ref": "#/definitions/imaginary_Error"
 func healthController(w http.ResponseWriter, r *http.Request) {
 	health := GetHealthStats()
 	body, _ := json.Marshal(health)
@@ -236,6 +277,19 @@ func imageHandler(w http.ResponseWriter, r *http.Request, buf []byte, operation 
 	w.Write(image.Body)
 }
 
+// swagger:operation GET /form ImaginaryExampleForm
+//
+// Example form
+//
+// Example form to operate imaginary api
+//
+// ---
+// tags:
+// - PUBLIC
+// responses:
+//   '200':
+//     description: Imaginary Health Stats
+//     content: text/html
 func formController(w http.ResponseWriter, r *http.Request) {
 	operations := []struct {
 		name   string
@@ -278,24 +332,41 @@ func formController(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(html))
 }
 
+// swagger:operation POST /dzsave  DzSave
+//
+// Post Save DzFile
+//
+// Provides the current health statistics of the imaginary server instance
+//
+// ---
+// tags:
+// - PUBLIC
+// parameters:
+// - name: DZFilesConfig
+//   in: body
+//   description: DZFile configuration
+//   required: true
+//   type: object
+//   schema:
+//     "$ref": "#/definitions/imaginary_DZFilesConfig"
+// responses:
+//   '200':
+//     description: DZSave Config
+//     type: object
+//     schema:
+//       "$ref": "#/definitions/imaginary_HealthStats"
+//   default:
+//     description: Imaginary Error
+//     type: object
+//     schema:
+//       "$ref": "#/definitions/imaginary_Error"
 func DZSave(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		ErrorReply(r, w, ErrMethodNotAllowed, ServerOptions{})
 		return
 	}
 
-	req := struct {
-		Provider string `json:"provider"` // azure ||  s3 || azureSAS
-
-		ImageKey      string `json:"imageKey"`
-		Container     string `json:"container"`
-		TempContainer string `json:"tempContainer"`
-
-		ContainerZone string `json:"containerZone"` // container zone (s3 region)
-
-		SASToken    string `json:"sasToken"`    // sas token for azure
-		AccountName string `json:"accountName"` // account name which is used in conjunction with sas token
-	}{}
+	req := DZFilesConfig{}
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -329,15 +400,7 @@ func DZSave(w http.ResponseWriter, r *http.Request) {
 		req.Provider = "azure"
 	}
 
-	if err := UploadDZFiles(DZFilesConfig{
-		Provider:      req.Provider,
-		ImageKey:      req.ImageKey,
-		Container:     req.Container,
-		TempContainer: req.TempContainer,
-		ContainerZone: req.ContainerZone,
-		SASToken:      req.SASToken,
-		AccountName:   req.AccountName,
-	}); err != nil {
+	if err := UploadDZFiles(req); err != nil {
 		ErrorReply(r, w,
 			NewError(
 				fmt.Sprintf("controllers: uploading dz files error: %s", err),

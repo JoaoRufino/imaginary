@@ -1,0 +1,291 @@
+{
+  "consumes": [
+    "multipart/form-data"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "This is the pomada API\n\nGeneral notes should go here",
+    "title": "pomada API",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "description": "Provides the current imaginary server version",
+        "tags": [
+          "PUBLIC"
+        ],
+        "summary": "Get Imaginary Version",
+        "operationId": "ImaginaryGetVersion",
+        "responses": {
+          "200": {
+            "description": "Imaginary Version",
+            "schema": {
+              "$ref": "#/definitions/imaginary_Versions"
+            }
+          },
+          "default": {
+            "description": "Request Error",
+            "schema": {
+              "$ref": "#/definitions/imaginary_Error"
+            }
+          }
+        }
+      }
+    },
+    "/dzsave": {
+      "post": {
+        "description": "Provides the current health statistics of the imaginary server instance",
+        "tags": [
+          "PUBLIC"
+        ],
+        "summary": "Post Save DzFile",
+        "operationId": "DzSave",
+        "parameters": [
+          {
+            "type": "object",
+            "description": "DZFile configuration",
+            "name": "DZFilesConfig",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/imaginary_DZFilesConfig"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DZSave Config",
+            "schema": {
+              "$ref": "#/definitions/imaginary_HealthStats"
+            }
+          },
+          "default": {
+            "description": "Imaginary Error",
+            "schema": {
+              "$ref": "#/definitions/imaginary_Error"
+            }
+          }
+        }
+      }
+    },
+    "/form": {
+      "get": {
+        "description": "Example form to operate imaginary api",
+        "tags": [
+          "PUBLIC"
+        ],
+        "summary": "Example form",
+        "operationId": "ImaginaryExampleForm",
+        "responses": {
+          "200": {
+            "description": "Imaginary Health Stats"
+          },
+          "default": {
+            "description": "Imaginary Error",
+            "schema": {
+              "$ref": "#/definitions/imaginary_Error"
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Provides the current health statistics of the imaginary server instance",
+        "tags": [
+          "PUBLIC"
+        ],
+        "summary": "Get Health Statistics",
+        "operationId": "ImaginaryHealthStats",
+        "responses": {
+          "200": {
+            "description": "Imaginary Health Stats",
+            "schema": {
+              "$ref": "#/definitions/imaginary_HealthStats"
+            }
+          },
+          "default": {
+            "description": "Imaginary Error",
+            "schema": {
+              "$ref": "#/definitions/imaginary_Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "imaginary_DZFilesConfig": {
+      "type": "object",
+      "required": [
+        "Provider"
+      ],
+      "properties": {
+        "AccountName": {
+          "description": "Account Name which is used in conjunction with SAS token",
+          "type": "string"
+        },
+        "Container": {
+          "type": "string"
+        },
+        "ContainerZone": {
+          "description": "Container Zone (S3 Region)",
+          "type": "string",
+          "example": "us-west-1"
+        },
+        "ImageKey": {
+          "description": "Image Key",
+          "type": "string"
+        },
+        "Provider": {
+          "description": "Cloud Provider",
+          "type": "string",
+          "enum": [
+            "azure",
+            "s3",
+            "azureSas"
+          ]
+        },
+        "SASToken": {
+          "description": "SAs token for azure",
+          "type": "string"
+        },
+        "TempContainer": {
+          "type": "string"
+        }
+      },
+      "x-go-name": "DZFilesConfig",
+      "x-go-package": "github.com/joao.rufino/imaginary"
+    },
+    "imaginary_Error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "Error code",
+          "type": "integer",
+          "format": "uint8",
+          "x-go-name": "Code",
+          "example": 6
+        },
+        "message": {
+          "description": "Error Message",
+          "type": "string",
+          "x-go-name": "Message",
+          "example": "not found"
+        }
+      },
+      "x-go-name": "Error",
+      "x-go-package": "github.com/joao.rufino/imaginary"
+    },
+    "imaginary_HealthStats": {
+      "type": "object",
+      "properties": {
+        "OSMemoryObtained": {
+          "description": "Operating System Memory Used",
+          "type": "number",
+          "format": "double",
+          "example": 68.58
+        },
+        "allocatedMemory": {
+          "description": "Current Allocated Memory",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "AllocatedMemory",
+          "example": 1.42
+        },
+        "completedGCCycles": {
+          "description": "Completed Garbage Collector Cycles",
+          "type": "integer",
+          "format": "uint32",
+          "x-go-name": "GCCycles",
+          "example": 0
+        },
+        "cpus": {
+          "description": "Number of CPUs",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "NumberOfCPUs",
+          "example": 8
+        },
+        "goroutines": {
+          "description": "Number of GoRoutines",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Goroutines",
+          "example": 4
+        },
+        "heapInUse": {
+          "description": "Current heap in use",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "HeapAllocated",
+          "example": 1.42
+        },
+        "maxHeapUsage": {
+          "description": "Max Heap Usage",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "HeapSys",
+          "example": 63.56
+        },
+        "objectsInUse": {
+          "description": "Total number of objects in use",
+          "type": "integer",
+          "format": "uint64",
+          "x-go-name": "ObjectsInUse",
+          "example": 7745
+        },
+        "totalAllocatedMemory": {
+          "description": "Total Allocated Memory",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "TotalAllocatedMemory",
+          "example": 1.42
+        },
+        "uptime": {
+          "description": "Number of seconds of uptime",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Uptime",
+          "example": 1293
+        }
+      },
+      "x-go-name": "HealthStats",
+      "x-go-package": "github.com/joao.rufino/imaginary"
+    },
+    "imaginary_Versions": {
+      "description": "Versions represents the used versions for several significant dependencies",
+      "type": "object",
+      "properties": {
+        "bimg": {
+          "description": "Bimg library Version",
+          "type": "string",
+          "x-go-name": "BimgVersion",
+          "example": "0.1.5"
+        },
+        "imaginary": {
+          "description": "Imaginary Server Version",
+          "type": "string",
+          "x-go-name": "ImaginaryVersion",
+          "example": "0.1.28"
+        },
+        "libvips": {
+          "description": "Vips Library Version",
+          "type": "string",
+          "x-go-name": "VipsVersion",
+          "example": "8.4.1"
+        }
+      },
+      "x-go-name": "Versions",
+      "x-go-package": "github.com/joao.rufino/imaginary"
+    }
+  }
+}

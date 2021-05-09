@@ -38,9 +38,16 @@ var (
 	ErrURLSignatureMismatch = NewError("URL signature mismatch", Forbidden)
 )
 
+// swagger:model imaginary_Error
 type Error struct {
+	//Error Message
+	//
+	//example: not found
 	Message string `json:"message,omitempty"`
-	Code    uint8  `json:"code"`
+	//Error code
+	//
+	//example: 6
+	Code uint8 `json:"code"`
 }
 
 func (e Error) JSON() []byte {

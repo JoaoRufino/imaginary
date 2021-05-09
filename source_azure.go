@@ -66,7 +66,7 @@ func (s *AzureImageSource) GetImage(r *http.Request) ([]byte, error) {
 	}
 
 	dlResp, err := session.NewBlobURL(key).
-		Download(r.Context(), 0, 0, azblob.BlobAccessConditions{}, false)
+		Download(r.Context(), 0, 0, azblob.BlobAccessConditions{}, false, azblob.ClientProvidedKeyOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("azure: error downloading blob: %w", err)
 	}
@@ -89,7 +89,7 @@ func (s *AzureImageSource) DownloadImage(container, key string) ([]byte, error) 
 	}
 
 	dlResp, err := session.NewBlobURL(key).
-		Download(context.Background(), 0, 0, azblob.BlobAccessConditions{}, false)
+		Download(context.Background(), 0, 0, azblob.BlobAccessConditions{}, false, azblob.ClientProvidedKeyOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("azure: error downloading blob: %w", err)
 	}
@@ -119,6 +119,9 @@ func (s *AzureImageSource) UploadImage(data []byte, fileKey, container string) e
 			azblob.BlobHTTPHeaders{},
 			azblob.Metadata{},
 			azblob.BlobAccessConditions{},
+			azblob.AccessTierNone,
+			azblob.BlobTagsMap{},
+			azblob.ClientProvidedKeyOptions{},
 		); err != nil {
 		return fmt.Errorf("azure: uploading image failed: %w", err)
 	}
@@ -140,6 +143,9 @@ func uploadBufferToAzure(data []byte, outputBlobKey, container string) error {
 			azblob.BlobHTTPHeaders{},
 			azblob.Metadata{},
 			azblob.BlobAccessConditions{},
+			azblob.AccessTierNone,
+			azblob.BlobTagsMap{},
+			azblob.ClientProvidedKeyOptions{},
 		); err != nil {
 		return fmt.Errorf("azure: uploading image failed: %w", err)
 	}

@@ -84,6 +84,14 @@ func join(o ServerOptions, route string) string {
 // NewServerMux creates a new HTTP server route multiplexer.
 func NewServerMux(o ServerOptions) http.Handler {
 	mux := http.NewServeMux()
+	docsFileServer := http.FileServer(http.FS(PublicHTMLFS()))
+
+	mux.Handle("/api-docs/", Middleware(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Vary", "Accept-Encoding")
+			w.Header().Set("Cache-Control", "no-cache")
+			docsFileServer.ServeHTTP(w, r)
+		}, o))
 
 	mux.Handle(join(o, "/"), Middleware(indexController, o))
 	mux.Handle(join(o, "/form"), Middleware(formController, o))

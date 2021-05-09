@@ -48,17 +48,35 @@ func initDownloadUploader(dzConf DZFilesConfig) (ImageDownUploader, error) {
 	return nil, fmt.Errorf("dzfiles: unknown provider")
 }
 
+// swagger:model imaginary_DZFilesConfig
 type DZFilesConfig struct {
-	Provider string // azure || azureSAS ||  s3
+	//Cloud Provider
+	//required: true
+	//enum: azure,s3,azureSas
+	Provider string
 
-	ImageKey      string
-	Container     string
+	//Image Key
+	//
+	//
+	ImageKey string
+	//
+	//
+	//
+	Container string
+	//
+	//
+	//
 	TempContainer string
-
+	//Container Zone (S3 Region)
+	//
+	//example: us-west-1
 	ContainerZone string // container zone (s3 region)
-
-	SASToken    string // sas token for azure
-	AccountName string // account name which is used in conjunction with sas token
+	// SAs token for azure
+	//
+	//
+	SASToken string
+	//Account Name which is used in conjunction with SAS token
+	AccountName string
 }
 
 func UploadDZFiles(dzConf DZFilesConfig) error {
@@ -184,7 +202,7 @@ func UploadDZFiles(dzConf DZFilesConfig) error {
 
 // generateDZFiles generates dz files in given dir with same image name, just changed
 // extension.
-func generateDZFiles(dirPath string, data []byte, imageName string, fileExtension string,) error {
+func generateDZFiles(dirPath string, data []byte, imageName string, fileExtension string) error {
 	imagePath := fmt.Sprintf("%s/%s", dirPath, imageName)
 
 	tiffImagePath := imagePath + fileExtension

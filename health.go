@@ -10,17 +10,48 @@ var start = time.Now()
 
 const MB float64 = 1.0 * 1024 * 1024
 
+// swagger:model imaginary_HealthStats
 type HealthStats struct {
-	Uptime               int64   `json:"uptime"`
-	AllocatedMemory      float64 `json:"allocatedMemory"`
+	//Number of seconds of uptime
+	//
+	//example: 1293
+	Uptime int64 `json:"uptime"`
+	//Current Allocated Memory
+	//
+	//example: 1.42
+	AllocatedMemory float64 `json:"allocatedMemory"`
+	//Total Allocated Memory
+	//
+	//example: 1.42
 	TotalAllocatedMemory float64 `json:"totalAllocatedMemory"`
-	Goroutines           int     `json:"goroutines"`
-	GCCycles             uint32  `json:"completedGCCycles"`
-	NumberOfCPUs         int     `json:"cpus"`
-	HeapSys              float64 `json:"maxHeapUsage"`
-	HeapAllocated        float64 `json:"heapInUse"`
-	ObjectsInUse         uint64  `json:"objectsInUse"`
-	OSMemoryObtained     float64 `json:"OSMemoryObtained"`
+	//Number of GoRoutines
+	//
+	//example: 4
+	Goroutines int `json:"goroutines"`
+	//Completed Garbage Collector Cycles
+	//
+	//example: 0
+	GCCycles uint32 `json:"completedGCCycles"`
+	//Number of CPUs
+	//
+	//example: 8
+	NumberOfCPUs int `json:"cpus"`
+	//Max Heap Usage
+	//
+	//example: 63.56
+	HeapSys float64 `json:"maxHeapUsage"`
+	//Current heap in use
+	//
+	//example: 1.42
+	HeapAllocated float64 `json:"heapInUse"`
+	//Total number of objects in use
+	//
+	//example: 7745
+	ObjectsInUse uint64 `json:"objectsInUse"`
+	//Operating System Memory Used
+	//
+	//example: 68.58
+	OSMemoryObtained float64 `json:"OSMemoryObtained"`
 }
 
 func GetHealthStats() *HealthStats {

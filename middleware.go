@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/cors"
+	"github.com/throttled/throttled/v2"
+	"github.com/throttled/throttled/v2/store/memstore"
 	"gopkg.in/h2non/bimg.v1"
-	"gopkg.in/throttled/throttled.v2"
-	"gopkg.in/throttled/throttled.v2/store/memstore"
 )
 
 func Middleware(fn func(http.ResponseWriter, *http.Request), o ServerOptions) http.Handler {
@@ -161,7 +161,7 @@ func getCacheControl(ttl int) string {
 }
 
 func isPublicPath(path string) bool {
-	return path == "/" || path == "/health" || path == "/form"
+	return path == "/" || path == "/health" || path == "/form" || path == "/api-docs"
 }
 
 func validateURLSignature(next http.Handler, o ServerOptions) http.Handler {
