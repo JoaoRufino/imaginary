@@ -176,7 +176,7 @@ Deploy it!
 git push heroku master
 ```
 
-### CloudFoundry
+### CloudFoundry 
 
 Assuming you have cloudfoundry account, [bluemix](https://console.ng.bluemix.net/) or [pivotal](https://console.run.pivotal.io/) and [command line utility installed](https://github.com/cloudfoundry/cli).
 
