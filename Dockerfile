@@ -82,7 +82,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
   libglib2.0-0 libjpeg62-turbo libpng16-16 libopenexr23 \
   libwebp6 libwebpmux3 libwebpdemux2 libtiff5 libgif7 libexif12 libxml2 libpoppler-glib8 \
   libmagickwand-6.q16-6 libpango1.0-0 libmatio4 libopenslide0 \
-  libgsf-1-114 fftw3 liborc-0.4-0 librsvg2-2 libcfitsio7 && \
+  libgsf-1-114 fftw3 liborc-0.4-0 librsvg2-2 libcfitsio7 valgrind && \
   apt-get autoremove -y && \
   apt-get autoclean && \
   apt-get clean && \
@@ -92,7 +92,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
 ENV PORT 9000
 
 # Run the entrypoint command by default when the container starts.
-ENTRYPOINT ["/usr/local/bin/imaginary"]
+ENTRYPOINT ["valgrind", "/usr/local/bin/imaginary"]
 
 # Expose the server TCP port
 EXPOSE ${PORT}
