@@ -32,9 +32,6 @@ RUN DEBIAN_FRONTEND=noninteractive \
   make install && \
   ldconfig
 
-# Installing golangci-lint
-WORKDIR /tmp
-RUN curl -fsSL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "${GOPATH}/bin" v${GOLANGCILINT_VERSION}
 
 WORKDIR ${GOPATH}/src/github.com/h2non/imaginary
 
@@ -48,10 +45,6 @@ RUN go mod download
 
 # Copy imaginary sources
 COPY . .
-
-# Run quality control
-RUN go test -test.v ./...
-RUN golangci-lint run ./...
 
 # Compile imaginary
 RUN go build -a \
