@@ -50,8 +50,8 @@ RUN go mod download
 COPY . .
 
 # Run quality control
-#RUN go test -test.v -test.race -test.covermode=atomic ./...
-#RUN golangci-lint run ./...
+RUN go test -test.v -test.race -test.covermode=atomic ./...
+RUN golangci-lint run ./...
 
 # Compile imaginary
 RUN go build -a \
@@ -82,7 +82,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
   libglib2.0-0 libjpeg62-turbo libpng16-16 libopenexr23 \
   libwebp6 libwebpmux3 libwebpdemux2 libtiff5 libgif7 libexif12 libxml2 libpoppler-glib8 \
   libmagickwand-6.q16-6 libpango1.0-0 libmatio4 libopenslide0 \
-  libgsf-1-114 fftw3 liborc-0.4-0 librsvg2-2 libcfitsio7 valgrind && \
+  libgsf-1-114 fftw3 liborc-0.4-0 librsvg2-2 libcfitsio7 && \
   apt-get autoremove -y && \
   apt-get autoclean && \
   apt-get clean && \

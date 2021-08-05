@@ -1,9 +1,7 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	_ "net/http/pprof"
 	"net/url"
 	"os"
 	"path"
@@ -77,10 +75,6 @@ func listenAndServe(s *http.Server, o ServerOptions) error {
 		return s.ListenAndServeTLS(o.CertFile, o.KeyFile)
 	}
 
-	// TODO: remove
-	go func() {
-		log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
-	}()
 	return s.ListenAndServe()
 }
 
