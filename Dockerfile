@@ -92,7 +92,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
 ENV PORT 9000
 
 # Run the entrypoint command by default when the container starts.
-ENTRYPOINT ["valgrind", "/usr/local/bin/imaginary"]
+ENTRYPOINT ["/usr/local/bin/imaginary"]
 
 # Expose the server TCP port
 EXPOSE ${PORT}
