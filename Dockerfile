@@ -1,7 +1,9 @@
 ARG GOLANG_VERSION=1.17
 FROM golang:${GOLANG_VERSION} as builder
 
-ARG IMAGINARY_VERSION=dev
+#ARGS are changed during build - dev is just a placeholder
+ARG RELEASE=dev
+ARG COMMIT=dev
 ARG LIBVIPS_VERSION=8.11.2
 ARG GOLANGCILINT_VERSION=1.23.3
 
@@ -53,7 +55,7 @@ COPY . .
 # Compile imaginary
 RUN go build -a \
     -o ${GOPATH}/bin/imaginary \
-    -ldflags="-s -w -h -X main.Version=${IMAGINARY_VERSION}" \
+    -ldflags="-s -w -h -X main.Version=${RELEASE}-${COMMIT}" \
     github.com/h2non/imaginary
 
 FROM debian:stable-slim
@@ -65,7 +67,7 @@ LABEL maintainer="tomas@aparicio.me" \
       org.label-schema.schema-version="1.0" \
       org.label-schema.url="https://github.com/h2non/imaginary" \
       org.label-schema.vcs-url="https://github.com/h2non/imaginary" \
-      org.label-schema.version="${IMAGINARY_VERSION}"
+      org.label-schema.version="${RELEASE}-${COMMIT}"
 
 COPY --from=builder /usr/local/lib /usr/local/lib
 COPY --from=builder /go/bin/imaginary /usr/local/bin/imaginary
