@@ -74,18 +74,18 @@ func uploadBufferToS3(buffer []byte, outputKey, bucket, region string) error {
 		return fmt.Errorf("failed to create s3 session: %w", err)
 	}
 
-	meta,err := getMetadata(buffer)
-	if err!=nil {
+	meta, err := getMetadata(buffer)
+	if err != nil {
 		return fmt.Errorf("failed to get metadata from file: %w", err)
 	}
 
 	if _, err := s3manager.NewUploader(sess).
 		Upload(&s3manager.UploadInput{
-			Bucket: aws.String(bucket),
-			Key:    &outputKey,
-			Body:   bytes.NewReader(buffer),
-			Metadata:   meta,
-	}); err != nil {
+			Bucket:   aws.String(bucket),
+			Key:      &outputKey,
+			Body:     bytes.NewReader(buffer),
+			Metadata: meta,
+		}); err != nil {
 		return fmt.Errorf("failed to upload file, %w", err)
 	}
 
@@ -138,16 +138,16 @@ func (s *S3Source) UploadImage(data []byte, fileKey, container string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create s3 session: %w", err)
 	}
-	meta,err := getMetadata(data)
-		if err!=nil {
-			return fmt.Errorf("failed to get metadata from file: %w", err)
+	meta, err := getMetadata(data)
+	if err != nil {
+		return fmt.Errorf("failed to get metadata from file: %w", err)
 	}
 
 	if _, err := s3manager.NewUploader(sess).
 		Upload(&s3manager.UploadInput{
-			Bucket: aws.String(container),
-			Key:    &fileKey,
-			Body:   bytes.NewReader(data),
+			Bucket:   aws.String(container),
+			Key:      &fileKey,
+			Body:     bytes.NewReader(data),
 			Metadata: meta,
 		}); err != nil {
 		return fmt.Errorf("failed to upload file, %w", err)
@@ -156,8 +156,8 @@ func (s *S3Source) UploadImage(data []byte, fileKey, container string) error {
 	return nil
 }
 
-func getMetadata(buffer []byte) (map[string]*string,error){
-	if filetype.IsImage(buffer){
+func getMetadata(buffer []byte) (map[string]*string, error) {
+	if filetype.IsImage(buffer) {
 		meta, err := bimg.Metadata(buffer)
 		if err != nil {
 			return nil, NewError("Cannot retrieve image metadata: %s"+err.Error(), BadRequest)
@@ -168,5 +168,5 @@ func getMetadata(buffer []byte) (map[string]*string,error){
 		}, nil
 	}
 
-	return make(map[string]*string),nil
+	return make(map[string]*string), nil
 }
