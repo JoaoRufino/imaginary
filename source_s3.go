@@ -81,10 +81,11 @@ func uploadBufferToS3(buffer []byte, outputKey, bucket, region string) error {
 
 	if _, err := s3manager.NewUploader(sess).
 		Upload(&s3manager.UploadInput{
-			Bucket:   aws.String(bucket),
-			Key:      &outputKey,
-			Body:     bytes.NewReader(buffer),
-			Metadata: meta,
+			Bucket:      aws.String(bucket),
+			Key:         &outputKey,
+			Body:        bytes.NewReader(buffer),
+			ContentType: aws.String(http.DetectContentType(buffer)),
+			Metadata:    meta,
 		}); err != nil {
 		return fmt.Errorf("failed to upload file, %w", err)
 	}
@@ -145,10 +146,11 @@ func (s *S3Source) UploadImage(data []byte, fileKey, container string) error {
 
 	if _, err := s3manager.NewUploader(sess).
 		Upload(&s3manager.UploadInput{
-			Bucket:   aws.String(container),
-			Key:      &fileKey,
-			Body:     bytes.NewReader(data),
-			Metadata: meta,
+			Bucket:      aws.String(container),
+			Key:         &fileKey,
+			Body:        bytes.NewReader(data),
+			ContentType: aws.String(http.DetectContentType(data)),
+			Metadata:    meta,
 		}); err != nil {
 		return fmt.Errorf("failed to upload file, %w", err)
 	}
@@ -163,8 +165,8 @@ func getMetadata(buffer []byte) (map[string]*string, error) {
 			return nil, NewError("Cannot retrieve image metadata: %s"+err.Error(), BadRequest)
 		}
 		return map[string]*string{
-			"x-amz-meta-width":  aws.String(strconv.Itoa(meta.Size.Width)),
-			"x-amz-meta-height": aws.String(strconv.Itoa(meta.Size.Height)),
+			"width":  aws.String(strconv.Itoa(meta.Size.Width)),
+			"height": aws.String(strconv.Itoa(meta.Size.Height)),
 		}, nil
 	}
 
