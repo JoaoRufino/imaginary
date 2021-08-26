@@ -184,7 +184,7 @@ func UploadDZFiles(dzConf DZFilesConfig) error {
 
 // generateDZFiles generates dz files in given dir with same image name, just changed
 // extension.
-func generateDZFiles(dirPath string, data []byte, imageName string, fileExtension string,) error {
+func generateDZFiles(dirPath string, data []byte, imageName string, fileExtension string) error {
 	imagePath := fmt.Sprintf("%s/%s", dirPath, imageName)
 
 	tiffImagePath := imagePath + fileExtension

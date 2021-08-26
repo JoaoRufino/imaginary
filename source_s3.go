@@ -3,8 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"gopkg.in/h2non/bimg.v1"
+	"gopkg.in/h2non/filetype.v1"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -71,11 +74,18 @@ func uploadBufferToS3(buffer []byte, outputKey, bucket, region string) error {
 		return fmt.Errorf("failed to create s3 session: %w", err)
 	}
 
+	meta, err := getMetadata(buffer)
+	if err != nil {
+		return fmt.Errorf("failed to get metadata from file: %w", err)
+	}
+
 	if _, err := s3manager.NewUploader(sess).
 		Upload(&s3manager.UploadInput{
-			Bucket: aws.String(bucket),
-			Key:    &outputKey,
-			Body:   bytes.NewReader(buffer),
+			Bucket:      aws.String(bucket),
+			Key:         &outputKey,
+			Body:        bytes.NewReader(buffer),
+			ContentType: aws.String(http.DetectContentType(buffer)),
+			Metadata:    meta,
 		}); err != nil {
 		return fmt.Errorf("failed to upload file, %w", err)
 	}
@@ -129,15 +139,36 @@ func (s *S3Source) UploadImage(data []byte, fileKey, container string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create s3 session: %w", err)
 	}
+	meta, err := getMetadata(data)
+	if err != nil {
+		return fmt.Errorf("failed to get metadata from file: %w", err)
+	}
 
 	if _, err := s3manager.NewUploader(sess).
 		Upload(&s3manager.UploadInput{
-			Bucket: aws.String(container),
-			Key:    &fileKey,
-			Body:   bytes.NewReader(data),
+			Bucket:      aws.String(container),
+			Key:         &fileKey,
+			Body:        bytes.NewReader(data),
+			ContentType: aws.String(http.DetectContentType(data)),
+			Metadata:    meta,
 		}); err != nil {
 		return fmt.Errorf("failed to upload file, %w", err)
 	}
 
 	return nil
+}
+
+func getMetadata(buffer []byte) (map[string]*string, error) {
+	if filetype.IsImage(buffer) {
+		meta, err := bimg.Metadata(buffer)
+		if err != nil {
+			return nil, NewError("Cannot retrieve image metadata: %s"+err.Error(), BadRequest)
+		}
+		return map[string]*string{
+			"width":  aws.String(strconv.Itoa(meta.Size.Width)),
+			"height": aws.String(strconv.Itoa(meta.Size.Height)),
+		}, nil
+	}
+
+	return make(map[string]*string), nil
 }
