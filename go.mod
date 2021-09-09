@@ -8,6 +8,7 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.8.3
 	github.com/aws/aws-sdk-go v1.30.7
 	github.com/garyburd/redigo v1.6.0 // indirect
+	github.com/h2non/bimg v1.1.4
 	github.com/hashicorp/golang-lru v0.0.0-20160813221303-0a025b7e63ad // indirect
 	github.com/rs/cors v0.0.0-20170727213201-7af7a1e09ba3
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a

@@ -12,11 +12,12 @@ import (
 	"strings"
 	"testing"
 
-	"gopkg.in/h2non/bimg.v1"
+	"github.com/h2non/bimg"
 )
 
 func TestIndex(t *testing.T) {
-	ts := testServer(indexController)
+	opts := ServerOptions{PathPrefix: "/"}
+	ts := testServer(indexController(opts))
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)

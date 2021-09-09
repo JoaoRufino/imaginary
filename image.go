@@ -8,8 +8,9 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
+	"strings"
 
-	"gopkg.in/h2non/bimg.v1"
+	"github.com/h2non/bimg"
 )
 
 // OperationsMap defines the allowed image transformation operations listed by name.
@@ -20,6 +21,7 @@ var OperationsMap = map[string]Operation{
 	"enlarge":        Enlarge,
 	"extract":        Extract,
 	"rotate":         Rotate,
+	"autorotate":     AutoRotate,
 	"flip":           Flip,
 	"flop":           Flop,
 	"thumbnail":      Thumbnail,
@@ -65,7 +67,7 @@ func Info(buf []byte, o ImageOptions) (Image, error) {
 
 	meta, err := bimg.Metadata(buf)
 	if err != nil {
-		return image, NewError("Cannot retrieve image metadata: %s"+err.Error(), BadRequest)
+		return image, NewError("Cannot retrieve image metadata: %s"+err.Error(), http.StatusBadRequest)
 	}
 
 	info := ImageInfo{
@@ -87,7 +89,7 @@ func Info(buf []byte, o ImageOptions) (Image, error) {
 
 func Resize(buf []byte, o ImageOptions) (Image, error) {
 	if o.Width == 0 && o.Height == 0 {
-		return Image{}, NewError("Missing required param: height or width", BadRequest)
+		return Image{}, NewError("Missing required param: height or width", http.StatusBadRequest)
 	}
 
 	opts := BimgOptions(o)
@@ -102,7 +104,7 @@ func Resize(buf []byte, o ImageOptions) (Image, error) {
 
 func Fit(buf []byte, o ImageOptions) (Image, error) {
 	if o.Width == 0 || o.Height == 0 {
-		return Image{}, NewError("Missing required params: height, width", BadRequest)
+		return Image{}, NewError("Missing required params: height, width", http.StatusBadRequest)
 	}
 
 	metadata, err := bimg.Metadata(buf)
@@ -113,7 +115,7 @@ func Fit(buf []byte, o ImageOptions) (Image, error) {
 	dims := metadata.Size
 
 	if dims.Width == 0 || dims.Height == 0 {
-		return Image{}, NewError("Width or height of requested image is zero", NotAcceptable)
+		return Image{}, NewError("Width or height of requested image is zero", http.StatusNotAcceptable)
 	}
 
 	// metadata.Orientation
@@ -165,7 +167,7 @@ func calculateDestinationFitDimension(imageWidth, imageHeight, fitWidth, fitHeig
 
 func Enlarge(buf []byte, o ImageOptions) (Image, error) {
 	if o.Width == 0 || o.Height == 0 {
-		return Image{}, NewError("Missing required params: height, width", BadRequest)
+		return Image{}, NewError("Missing required params: height, width", http.StatusBadRequest)
 	}
 
 	opts := BimgOptions(o)
@@ -179,7 +181,7 @@ func Enlarge(buf []byte, o ImageOptions) (Image, error) {
 
 func Extract(buf []byte, o ImageOptions) (Image, error) {
 	if o.AreaWidth == 0 || o.AreaHeight == 0 {
-		return Image{}, NewError("Missing required params: areawidth or areaheight", BadRequest)
+		return Image{}, NewError("Missing required params: areawidth or areaheight", http.StatusBadRequest)
 	}
 
 	opts := BimgOptions(o)
@@ -193,7 +195,7 @@ func Extract(buf []byte, o ImageOptions) (Image, error) {
 
 func Crop(buf []byte, o ImageOptions) (Image, error) {
 	if o.Width == 0 && o.Height == 0 {
-		return Image{}, NewError("Missing required param: height or width", BadRequest)
+		return Image{}, NewError("Missing required param: height or width", http.StatusBadRequest)
 	}
 
 	opts := BimgOptions(o)
@@ -203,7 +205,7 @@ func Crop(buf []byte, o ImageOptions) (Image, error) {
 
 func SmartCrop(buf []byte, o ImageOptions) (Image, error) {
 	if o.Width == 0 && o.Height == 0 {
-		return Image{}, NewError("Missing required param: height or width", BadRequest)
+		return Image{}, NewError("Missing required param: height or width", http.StatusBadRequest)
 	}
 
 	opts := BimgOptions(o)
@@ -214,11 +216,36 @@ func SmartCrop(buf []byte, o ImageOptions) (Image, error) {
 
 func Rotate(buf []byte, o ImageOptions) (Image, error) {
 	if o.Rotate == 0 {
-		return Image{}, NewError("Missing required param: rotate", BadRequest)
+		return Image{}, NewError("Missing required param: rotate", http.StatusBadRequest)
 	}
 
 	opts := BimgOptions(o)
 	return Process(buf, opts)
+}
+
+func AutoRotate(buf []byte, o ImageOptions) (out Image, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch value := r.(type) {
+			case error:
+				err = value
+			case string:
+				err = errors.New(value)
+			default:
+				err = errors.New("libvips internal error")
+			}
+			out = Image{}
+		}
+	}()
+
+	// Resize image via bimg
+	ibuf, err := bimg.NewImage(buf).AutoRotate()
+	if err != nil {
+		return Image{}, err
+	}
+
+	mime := GetImageMimeType(bimg.DetermineImageType(ibuf))
+	return Image{Body: ibuf, Mime: mime}, nil
 }
 
 func Flip(buf []byte, o ImageOptions) (Image, error) {
@@ -235,7 +262,7 @@ func Flop(buf []byte, o ImageOptions) (Image, error) {
 
 func Thumbnail(buf []byte, o ImageOptions) (Image, error) {
 	if o.Width == 0 && o.Height == 0 {
-		return Image{}, NewError("Missing required params: width or height", BadRequest)
+		return Image{}, NewError("Missing required params: width or height", http.StatusBadRequest)
 	}
 
 	return Process(buf, BimgOptions(o))
@@ -243,14 +270,14 @@ func Thumbnail(buf []byte, o ImageOptions) (Image, error) {
 
 func Zoom(buf []byte, o ImageOptions) (Image, error) {
 	if o.Factor == 0 {
-		return Image{}, NewError("Missing required param: factor", BadRequest)
+		return Image{}, NewError("Missing required param: factor", http.StatusBadRequest)
 	}
 
 	opts := BimgOptions(o)
 
 	if o.Top > 0 || o.Left > 0 {
 		if o.AreaWidth == 0 && o.AreaHeight == 0 {
-			return Image{}, NewError("Missing required params: areawidth, areaheight", BadRequest)
+			return Image{}, NewError("Missing required params: areawidth, areaheight", http.StatusBadRequest)
 		}
 
 		opts.Top = o.Top
@@ -269,10 +296,10 @@ func Zoom(buf []byte, o ImageOptions) (Image, error) {
 
 func Convert(buf []byte, o ImageOptions) (Image, error) {
 	if o.Type == "" {
-		return Image{}, NewError("Missing required param: type", BadRequest)
+		return Image{}, NewError("Missing required param: type", http.StatusBadRequest)
 	}
 	if ImageType(o.Type) == bimg.UNKNOWN {
-		return Image{}, NewError("Invalid image type: "+o.Type, BadRequest)
+		return Image{}, NewError("Invalid image type: "+o.Type, http.StatusBadRequest)
 	}
 	opts := BimgOptions(o)
 
@@ -281,7 +308,7 @@ func Convert(buf []byte, o ImageOptions) (Image, error) {
 
 func Watermark(buf []byte, o ImageOptions) (Image, error) {
 	if o.Text == "" {
-		return Image{}, NewError("Missing required param: text", BadRequest)
+		return Image{}, NewError("Missing required param: text", http.StatusBadRequest)
 	}
 
 	opts := BimgOptions(o)
@@ -312,11 +339,11 @@ func WatermarkImageSVG(buf []byte, o ImageOptions) (Image, error) {
 
 func WatermarkImage(buf []byte, o ImageOptions) (Image, error) {
 	if o.Image == "" {
-		return Image{}, NewError("Missing required param: image", BadRequest)
+		return Image{}, NewError("Missing required param: image", http.StatusBadRequest)
 	}
 	response, err := http.Get(o.Image)
 	if err != nil {
-		return Image{}, NewError(fmt.Sprintf("Unable to retrieve watermark image. %s", o.Image), BadRequest)
+		return Image{}, NewError(fmt.Sprintf("Unable to retrieve watermark image. %s", o.Image), http.StatusBadRequest)
 	}
 	defer func() {
 		_ = response.Body.Close()
@@ -332,7 +359,7 @@ func WatermarkImage(buf []byte, o ImageOptions) (Image, error) {
 			errMessage = fmt.Sprintf("%s. %s", errMessage, err.Error())
 		}
 
-		return Image{}, NewError(errMessage, BadRequest)
+		return Image{}, NewError(errMessage, http.StatusBadRequest)
 	}
 
 	opts := BimgOptions(o)
@@ -346,7 +373,7 @@ func WatermarkImage(buf []byte, o ImageOptions) (Image, error) {
 
 func GaussianBlur(buf []byte, o ImageOptions) (Image, error) {
 	if o.Sigma == 0 && o.MinAmpl == 0 {
-		return Image{}, NewError("Missing required param: sigma or minampl", BadRequest)
+		return Image{}, NewError("Missing required param: sigma or minampl", http.StatusBadRequest)
 	}
 	opts := BimgOptions(o)
 	return Process(buf, opts)
@@ -354,10 +381,10 @@ func GaussianBlur(buf []byte, o ImageOptions) (Image, error) {
 
 func Pipeline(buf []byte, o ImageOptions) (Image, error) {
 	if len(o.Operations) == 0 {
-		return Image{}, NewError("Missing or invalid pipeline operations JSON", BadRequest)
+		return Image{}, NewError("Missing or invalid pipeline operations JSON", http.StatusBadRequest)
 	}
 	if len(o.Operations) > 10 {
-		return Image{}, NewError("Maximum allowed pipeline operations exceeded", BadRequest)
+		return Image{}, NewError("Maximum allowed pipeline operations exceeded", http.StatusBadRequest)
 	}
 
 	// Validate and built operations
@@ -365,7 +392,7 @@ func Pipeline(buf []byte, o ImageOptions) (Image, error) {
 		// Validate supported operation name
 		var exists bool
 		if operation.Operation, exists = OperationsMap[operation.Name]; !exists {
-			return Image{}, NewError(fmt.Sprintf("Unsupported operation name: %s", operation.Name), BadRequest)
+			return Image{}, NewError(fmt.Sprintf("Unsupported operation name: %s", operation.Name), http.StatusBadRequest)
 		}
 
 		// Parse and construct operation options
@@ -416,11 +443,20 @@ func Process(buf []byte, opts bimg.Options) (out Image, err error) {
 		}
 	}()
 
-	buf, err = bimg.Resize(buf, opts)
+	// Resize image via bimg
+	ibuf, err := bimg.Resize(buf, opts)
+
+	// Handle specific type encode errors gracefully
+	if err != nil && strings.Contains(err.Error(), "encode") && (opts.Type == bimg.WEBP || opts.Type == bimg.HEIF) {
+		// Always fallback to JPEG
+		opts.Type = bimg.JPEG
+		ibuf, err = bimg.Resize(buf, opts)
+	}
+
 	if err != nil {
 		return Image{}, err
 	}
 
-	mime := GetImageMimeType(bimg.DetermineImageType(buf))
-	return Image{Body: buf, Mime: mime}, nil
+	mime := GetImageMimeType(bimg.DetermineImageType(ibuf))
+	return Image{Body: ibuf, Mime: mime}, nil
 }
