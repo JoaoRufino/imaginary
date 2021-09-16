@@ -102,10 +102,10 @@ func imageHandler(w http.ResponseWriter, r *http.Request, buf []byte, operation 
 	}
 
 	// Finally check if image MIME type is supported
-	if !IsImageMimeTypeSupported(mimeType) {
-		ErrorReply(r, w, ErrUnsupportedMedia, o)
-		return
-	}
+	//if !IsImageMimeTypeSupported(mimeType) {
+	//	ErrorReply(r, w, ErrUnsupportedMedia, o)
+	//	return
+	//}
 
 	opts, err := buildParamsFromQuery(r.URL.Query())
 	if err != nil {
@@ -163,6 +163,7 @@ func imageHandler(w http.ResponseWriter, r *http.Request, buf []byte, operation 
 	}
 
 	if len(parseS3Key(r)) != 0 {
+
 		if err := uploadBufferToS3(
 			image.Body,
 			parseS3OutputKey(r),

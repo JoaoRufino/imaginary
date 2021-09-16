@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	_ uint8 = iota
+	_ int = iota
 	BadRequest
 	NotAllowed
 	Unsupported

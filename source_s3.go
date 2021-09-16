@@ -3,11 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"gopkg.in/h2non/bimg.v1"
-	"gopkg.in/h2non/filetype.v1"
+	"github.com/h2non/bimg"
+	"github.com/h2non/filetype"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -164,11 +165,42 @@ func getMetadata(buffer []byte) (map[string]*string, error) {
 		if err != nil {
 			return nil, NewError("Cannot retrieve image metadata: %s"+err.Error(), BadRequest)
 		}
+
+		xResolution, err := calcRational(meta.EXIF.XResolution)
+		if err != nil {
+			return nil, NewError("Cannot retrieve image metadata: %s"+err.Error(), BadRequest)
+		}
+
+		yResolution, err := calcRational(meta.EXIF.YResolution)
+		if err != nil {
+			return nil, NewError("Cannot retrieve image metadata: %s"+err.Error(), BadRequest)
+		}
+
 		return map[string]*string{
-			"width":  aws.String(strconv.Itoa(meta.Size.Width)),
-			"height": aws.String(strconv.Itoa(meta.Size.Height)),
+			"width":          aws.String(strconv.Itoa(meta.Size.Width)),
+			"height":         aws.String(strconv.Itoa(meta.Size.Height)),
+			"xResolution":    aws.String(fmt.Sprintf("%f", xResolution)),
+			"yResolution":    aws.String(fmt.Sprintf("%f", yResolution)),
+			"resolutionUnit": aws.String(strconv.Itoa(meta.EXIF.ResolutionUnit)), //2=inches, 3=cm
+			"channels":       aws.String(strconv.Itoa(meta.Channels)),
 		}, nil
 	}
 
 	return make(map[string]*string), nil
+}
+
+func calcRational(rational string) (float64, error) {
+	splitRational := strings.Split(rational, "/")
+
+	numerator, err := strconv.ParseFloat(splitRational[0], 64)
+	if err != nil {
+		return -1, err
+	}
+
+	denominator, err := strconv.ParseFloat(splitRational[0], 64)
+	if err != nil {
+		return -1, err
+	}
+
+	return numerator / denominator, nil
 }
